@@ -1,0 +1,17 @@
+{
+  "name": "client-only-rendering-detector",
+  "version": "0.0.0",
+  "description": "Detect routes that depend on client-only rendering for essential content.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edilec/client-only-rendering-detector"
+  }
+}
