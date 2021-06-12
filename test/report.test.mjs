@@ -130,3 +130,23 @@ test('unsupported HTML entities and mismatched essential tags are incomplete', (
   const tags = good(); tags.serverHtml = '<h1>Welcome</h2>';
   assert.deepEqual(rules(compareRendering(tags)), ['html-unparseable']);
 });
+
+test('head metadata never counts as visible server content', () => {
+  const input = good();
+  input.serverHtml = '<html><head><title>Account balance</title></head><body></body></html>';
+  input.config.essentials = [{ id: 'balance', kind: 'text', text: 'Account balance' }];
+  input.render = { schemaVersion: '1', complete: true, headings: [], text: ['Account balance'], links: [] };
+  assert.deepEqual(rules(compareRendering(input)), ['client-only-essential']);
+});
+
+test('invisible controls cannot become passing essentials or render evidence', () => {
+  const input = good();
+  input.serverHtml = '<h1>&#8206;</h1>';
+  input.config.essentials = [{ id: 'heading', kind: 'heading', text: '\u200e' }];
+  input.render = { schemaVersion: '1', complete: true, headings: ['\u200e'], text: [], links: [] };
+  assert.deepEqual(rules(compareRendering(input)), ['essential-invalid']);
+  input.config.essentials[0].text = 'Visible';
+  assert.deepEqual(rules(compareRendering(input)), ['render-invalid']);
+  input.render.headings[0] = 'Visible';
+  assert.deepEqual(rules(compareRendering(input)), ['html-unparseable']);
+});

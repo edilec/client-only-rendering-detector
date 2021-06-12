@@ -4,7 +4,8 @@ export const LIMITS = Object.freeze({ bytes: 1_048_576, essentials: 100, exclusi
 const UNKNOWN = new Set(['input-unreadable', 'config-invalid', 'config-incomplete', 'render-invalid', 'render-incomplete', 'html-unparseable', 'byte-limit', 'depth-limit', 'record-limit', 'time-limit', 'essential-invalid', 'essential-duplicate', 'exclusion-invalid', 'no-evaluable-essential', 'essential-unobserved']);
 const order = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const plain = v => v !== null && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
-const nonempty = v => typeof v === 'string' && v.trim().length > 0 && v.length <= 1000;
+const safeText = v => !/[\p{Default_Ignorable_Code_Point}\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(v);
+const nonempty = v => typeof v === 'string' && v.trim().length > 0 && v.length <= 1000 && safeText(v);
 const norm = v => v.replace(/\s+/gu, ' ').trim();
 const finding = (ruleId, pointer = '', essentialId) => ({
   ruleId, severity: 'error',
@@ -42,6 +43,7 @@ function parseHtml(html, expired) {
   let heading = null, anchor = null, i = 0;
   const append = raw => {
     const value = decode(raw);
+    if (!safeText(value)) throw new Error('invisible or control content');
     visible.push(value);
     if (heading) heading.parts.push(value);
     if (anchor) anchor.parts.push(value);
@@ -73,7 +75,7 @@ function parseHtml(html, expired) {
     const m = raw.match(/^(\/)?([a-z][\w:-]*)([\s\S]*)$/i);
     if (!m) return null;
     const closing = Boolean(m[1]), tag = m[2].toLowerCase();
-    if (!closing && ['script', 'style', 'template'].includes(tag)) {
+    if (!closing && ['head', 'script', 'style', 'template'].includes(tag)) {
       const re = new RegExp(`</${tag}\\s*>`, 'ig'); re.lastIndex = i;
       const found = re.exec(html);
       if (!found) return null;
