@@ -4,8 +4,9 @@ export const LIMITS = Object.freeze({ bytes: 1_048_576, essentials: 100, exclusi
 const UNKNOWN = new Set(['input-unreadable', 'config-invalid', 'config-incomplete', 'render-invalid', 'render-incomplete', 'html-unparseable', 'byte-limit', 'depth-limit', 'record-limit', 'time-limit', 'essential-invalid', 'essential-duplicate', 'exclusion-invalid', 'no-evaluable-essential', 'essential-unobserved']);
 const order = (a, b) => a < b ? -1 : a > b ? 1 : 0;
 const plain = v => v !== null && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
-const safeText = v => !/[\p{Default_Ignorable_Code_Point}\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(v);
-const nonempty = v => typeof v === 'string' && v.trim().length > 0 && v.length <= 1000 && safeText(v);
+const safeText = v => !/[\u200e\u200f\u202a-\u202e\u2066-\u2069\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u.test(v);
+const hasVisible = v => v.replace(/[\s\p{Default_Ignorable_Code_Point}]/gu, '').length > 0;
+const nonempty = v => typeof v === 'string' && v.length <= 1000 && safeText(v) && hasVisible(v);
 const norm = v => v.replace(/\s+/gu, ' ').trim();
 const finding = (ruleId, pointer = '', essentialId) => ({
   ruleId, severity: 'error',

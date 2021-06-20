@@ -150,3 +150,16 @@ test('invisible controls cannot become passing essentials or render evidence', (
   input.render.headings[0] = 'Visible';
   assert.deepEqual(rules(compareRendering(input)), ['html-unparseable']);
 });
+
+test('visible joined emoji and Indic text remain valid essentials', () => {
+  const input = good();
+  input.serverHtml = '<h1>Meet 👩‍💻 developers</h1><p>क्‍ष</p>';
+  input.config.essentials = [
+    { id: 'heading', kind: 'heading', text: 'Meet 👩‍💻 developers' },
+    { id: 'text', kind: 'text', text: 'क्‍ष' }
+  ];
+  input.render = { schemaVersion: '1', complete: true, headings: ['Meet 👩‍💻 developers'], text: ['क्‍ष'], links: [] };
+  assert.equal(compareRendering(input).status, 'pass');
+  input.config.essentials[0].text = '\u200d';
+  assert.deepEqual(rules(compareRendering(input)), ['essential-invalid']);
+});
